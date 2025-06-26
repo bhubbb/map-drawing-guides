@@ -17,6 +17,7 @@ This MCP server acts as a bridge between AI assistants and popular drawing tutor
 ### 🔍 Search Tool
 - Search across drawing tutorials from Easy Drawing Guides
 - Returns structured metadata and ranked list of relevant guides
+- Validates all returned URLs to ensure they are accessible
 - Configurable result limits
 
 ### 📋 Guide Retrieval Tool
@@ -101,7 +102,7 @@ Search for drawing tutorials across supported sites.
 
 **Returns:**
 - Search metadata (query, results count, sources searched)
-- List of matching drawing guides with titles, URLs, and descriptions
+- List of matching drawing guides with titles and validated URLs
 
 **Example:**
 ```json
@@ -177,8 +178,9 @@ List available drawing categories and popular topics.
 
 1. **Site Search**: Queries Easy Drawing Guides for relevant tutorials
 2. **Relevance Ranking**: Sorts results by keyword relevance in titles
-3. **Content Filtering**: Filters out irrelevant or duplicate results
-4. **Source Attribution**: Clearly identifies the source of each result
+3. **URL Validation**: Validates each URL to ensure it's accessible before including in results
+4. **Content Filtering**: Filters out irrelevant or duplicate results
+5. **Source Attribution**: Clearly identifies the source of each result
 
 ### Structured Output Format
 
@@ -234,8 +236,8 @@ Ask your AI assistant: *"Search for drawing tutorials about dogs"*
 The server will:
 1. Search Easy Drawing Guides for "dogs"
 2. Return structured metadata (query, result count, sources)
-3. Provide a list of relevant tutorials with descriptions
-4. Include URLs for direct access to full guides
+3. Provide a list of relevant tutorials with validated URLs
+4. Include direct access to full guides
 
 ### Retrieve Specific Guide
 Ask your AI assistant: *"Get the detailed instructions for this drawing guide: [URL]"*

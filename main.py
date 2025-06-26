@@ -66,25 +66,23 @@ def search_easy_drawing_guides(query: str, limit: int = 10) -> List[Dict[str, An
                     title = link_elem.get_text(strip=True)
                     url = urljoin(EASY_DRAWING_GUIDES_BASE, link_elem['href'])
 
-                    # Extract description if available
-                    description = ""
-                    desc_elem = article.find('div', class_='entry-content') or article.find('p')
-                    if desc_elem:
-                        description = desc_elem.get_text(strip=True)[:200] + "..."
-
-                    results.append({
-                        'title': title,
-                        'url': url,
-                        'description': description,
-                        'source': 'Easy Drawing Guides'
-                    })
+                    # Validate the URL before adding to results
+                    try:
+                        validate_response = make_request(url)
+                        if validate_response.status_code == 200:
+                            results.append({
+                                'title': title,
+                                'url': url,
+                                'source': 'Easy Drawing Guides'
+                            })
+                    except Exception as e:
+                        logger.warning(f"Invalid URL skipped: {url} - {e}")
+                        continue
 
         return results
     except Exception as e:
         logger.error(f"Search failed for Easy Drawing Guides: {e}")
         return []
-
-            'source': 'Easy Drawing Guides'
 
 def get_drawing_guide_content(url: str) -> Dict[str, Any]:
     """Extract drawing guide content from a URL."""
@@ -282,10 +280,7 @@ async def handle_search(arguments: dict[str, Any]) -> list[types.TextContent]:
             for i, guide in enumerate(all_guides, 1):
                 results_text += f"## {i}. {guide['title']}\n"
                 results_text += f"**Source:** {guide['source']}\n"
-                results_text += f"**URL:** {guide['url']}\n"
-                if guide['description']:
-                    results_text += f"**Description:** {guide['description']}\n"
-                results_text += "\n"
+                results_text += f"**URL:** {guide['url']}\n\n"
 
             results.append(types.TextContent(
                 type="text",
