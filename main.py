@@ -275,8 +275,8 @@ async def handle_get_guide(arguments: dict[str, Any]) -> list[types.TextContent]
     if not url:
         raise ValueError("URL parameter is required")
 
-    # Validate URL is from supported sites
-    if not (EASY_DRAWING_GUIDES_BASE in url):
+    # Validate URL is from supported sites (handle both www and non-www)
+    if not ("easydrawingguides.com" in url):
         raise ValueError("URL must be from easydrawingguides.com")
 
     results = []
