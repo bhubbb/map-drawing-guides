@@ -249,6 +249,21 @@ async def handle_search(arguments: dict[str, Any]) -> list[types.TextContent]:
                 results_text += f"**Source:** {guide['source']}\n"
                 results_text += f"**URL:** {guide['url']}\n\n"
 
+            # Add instructions for LLM
+            results_text += "---\n\n"
+            results_text += "**Instructions:** To retrieve the full content of any guide above, use the `get_guide` tool with the exact URL provided. "
+            results_text += "Copy and paste the URL exactly as shown above (including https://).\n\n"
+            results_text += "**Example usage:**\n"
+            results_text += "```json\n"
+            results_text += "{\n"
+            results_text += '  "name": "get_guide",\n'
+            results_text += '  "arguments": {\n'
+            if all_guides:
+                results_text += f'    "url": "{all_guides[0]["url"]}"\n'
+            results_text += "  }\n"
+            results_text += "}\n"
+            results_text += "```"
+
             results.append(types.TextContent(
                 type="text",
                 text=results_text

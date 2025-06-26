@@ -18,6 +18,7 @@ This MCP server acts as a bridge between AI assistants and popular drawing tutor
 - Search across drawing tutorials from Easy Drawing Guides
 - Returns structured metadata and ranked list of relevant guides
 - Validates all returned URLs to ensure they are accessible
+- Includes instructions for LLMs on how to use exact URLs with the `get_guide` tool
 - Configurable result limits
 
 ### 📋 Guide Retrieval Tool
@@ -103,6 +104,7 @@ Search for drawing tutorials across supported sites.
 **Returns:**
 - Search metadata (query, results count, sources searched)
 - List of matching drawing guides with titles and validated URLs
+- Instructions for using the `get_guide` tool with exact URLs from the results
 
 **Example:**
 ```json
