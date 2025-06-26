@@ -8,11 +8,12 @@ from easydrawingguides.com.
 
 import asyncio
 import logging
-import re
+
 from typing import Any, List, Dict
 from urllib.parse import urljoin, quote
 import requests
 from bs4 import BeautifulSoup
+from markdownify import markdownify as md
 
 from mcp.server.models import InitializationOptions
 from mcp.server import NotificationOptions, Server
@@ -85,7 +86,7 @@ def search_easy_drawing_guides(query: str, limit: int = 10) -> List[Dict[str, An
         return []
 
 def get_drawing_guide_content(url: str) -> Dict[str, Any]:
-    """Extract drawing guide content from a URL."""
+    """Extract drawing guide content from a URL and convert to markdown."""
     try:
         response = make_request(url)
         soup = BeautifulSoup(response.content, 'html.parser')
@@ -94,59 +95,27 @@ def get_drawing_guide_content(url: str) -> Dict[str, Any]:
         title = soup.find('h1') or soup.find('title')
         title_text = title.get_text(strip=True) if title else "Unknown Title"
 
-        # Extract main content
-        content_selectors = [
-            'div.entry-content',
-            'article',
-            'div.content',
-            'main',
-            'div.post-content'
-        ]
+        # Extract content from the specific div class="inside-article"
+        content_elem = soup.find('div', class_='inside-article')
 
-        content_text = ""
-        for selector in content_selectors:
-            content_elem = soup.select_one(selector)
-            if content_elem:
-                # Remove script and style elements
-                for script in content_elem(["script", "style"]):
-                    script.decompose()
+        if content_elem and hasattr(content_elem, 'find_all'):
+            # Remove ad boxes
+            for ad_box in content_elem.find_all('div', class_='mv-ad-box'):
+                ad_box.decompose()
 
-                content_text = content_elem.get_text(separator='\n', strip=True)
-                break
+            # Remove script and style elements
+            for script in content_elem(["script", "style"]):
+                script.decompose()
 
-        # Extract step-by-step instructions if present
-        steps = []
-        step_elements = soup.find_all(['ol', 'ul']) or soup.find_all('div', class_=re.compile(r'step', re.I))
-
-        for step_elem in step_elements:
-            if step_elem.name in ['ol', 'ul']:
-                for li in step_elem.find_all('li'):
-                    step_text = li.get_text(strip=True)
-                    if step_text and len(step_text) > 10:  # Filter out short items
-                        steps.append(step_text)
-            else:
-                step_text = step_elem.get_text(strip=True)
-                if step_text and len(step_text) > 10:
-                    steps.append(step_text)
-
-        # Extract images (for reference)
-        images = []
-        img_elements = soup.find_all('img')
-        for img in img_elements:
-            src = img.get('src')
-            if src:
-                alt_text = img.get('alt', '') or ''
-                images.append({
-                    'src': urljoin(url, src),
-                    'alt': alt_text
-                })
+            # Convert to markdown
+            content_markdown = md(str(content_elem), heading_style="ATX")
+        else:
+            content_markdown = "Content not found in expected format."
 
         return {
             'title': title_text,
             'url': url,
-            'content': content_text,
-            'steps': steps,
-            'images': images[:5],  # Limit to first 5 images
+            'content': content_markdown,
             'source': 'Easy Drawing Guides'
         }
 
@@ -156,8 +125,6 @@ def get_drawing_guide_content(url: str) -> Dict[str, Any]:
             'title': 'Error',
             'url': url,
             'content': f'Failed to extract content: {str(e)}',
-            'steps': [],
-            'images': [],
             'source': 'Unknown'
         }
 
@@ -320,39 +287,14 @@ async def handle_get_guide(arguments: dict[str, Any]) -> list[types.TextContent]
         # Metadata
         results.append(types.TextContent(
             type="text",
-            text=f"# Guide Metadata\n\n**Title:** {guide_content['title']}\n**Source:** {guide_content['source']}\n**URL:** {guide_content['url']}\n**Content Length:** {len(guide_content['content'])} characters\n**Steps Found:** {len(guide_content['steps'])}\n**Images Found:** {len(guide_content['images'])}"
+            text=f"# Guide Metadata\n\n**Title:** {guide_content['title']}\n**Source:** {guide_content['source']}\n**URL:** {guide_content['url']}\n**Content Length:** {len(guide_content['content'])} characters"
         ))
 
-        # Main Content
+        # Main Content (Markdown)
         if guide_content['content']:
             results.append(types.TextContent(
                 type="text",
-                text=f"# Drawing Guide Content\n\n{guide_content['content']}"
-            ))
-
-        # Step-by-step instructions if available
-        if guide_content['steps']:
-            steps_text = "# Step-by-Step Instructions\n\n"
-            for i, step in enumerate(guide_content['steps'], 1):
-                steps_text += f"**Step {i}:** {step}\n\n"
-
-            results.append(types.TextContent(
-                type="text",
-                text=steps_text
-            ))
-
-        # Images reference if available
-        if guide_content['images']:
-            images_text = "# Reference Images\n\n"
-            for i, img in enumerate(guide_content['images'], 1):
-                images_text += f"**Image {i}:** {img['src']}\n"
-                if img['alt']:
-                    images_text += f"**Alt Text:** {img['alt']}\n"
-                images_text += "\n"
-
-            results.append(types.TextContent(
-                type="text",
-                text=images_text
+                text=guide_content['content']
             ))
 
     except Exception as e:

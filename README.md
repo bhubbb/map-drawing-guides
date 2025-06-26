@@ -21,10 +21,10 @@ This MCP server acts as a bridge between AI assistants and popular drawing tutor
 - Configurable result limits
 
 ### 📋 Guide Retrieval Tool
-- Retrieve complete drawing tutorial content from URLs
-- Extract step-by-step instructions automatically
-- Include reference images and descriptions
-- Structured output with metadata and organized content
+- Retrieve complete drawing tutorial content from URLs as Markdown
+- Extract content from the main article section (removes ads)
+- Preserve original formatting and structure in Markdown format
+- Clean, readable output with metadata
 
 ### 📚 Categories Tool
 - List available drawing categories from Easy Drawing Guides
@@ -123,10 +123,8 @@ Retrieve detailed content of a specific drawing guide.
 - `url` (required): URL of the drawing guide from easydrawingguides.com
 
 **Returns:**
-- Guide metadata (title, source, URL, content statistics)
-- Complete tutorial content
-- Step-by-step instructions (if available)
-- Reference images information
+- Guide metadata (title, source, URL, content length)
+- Complete tutorial content formatted as Markdown
 
 **Example:**
 ```json
@@ -169,9 +167,9 @@ List available drawing categories and popular topics.
 ### Content Extraction Process
 
 1. **Web Scraping**: Uses requests and BeautifulSoup to fetch and parse web content
-2. **Content Structure**: Identifies main content areas, titles, and instruction lists
-3. **Step Extraction**: Automatically finds and extracts step-by-step instructions
-4. **Image Processing**: Locates and catalogs reference images
+2. **Content Targeting**: Extracts content specifically from `<div class="inside-article">` 
+3. **Ad Removal**: Removes `<div class="mv-ad-box">` elements to clean up content
+4. **Markdown Conversion**: Converts HTML content to clean, readable Markdown format
 5. **Metadata Generation**: Creates structured metadata for each guide
 
 ### Search Algorithm
@@ -244,9 +242,9 @@ Ask your AI assistant: *"Get the detailed instructions for this drawing guide: [
 
 The server will:
 1. Fetch the complete tutorial content from the URL
-2. Extract the main content and step-by-step instructions
-3. Identify reference images and their descriptions
-4. Return structured metadata and organized content
+2. Extract content from the main article section (removes ads)
+3. Convert HTML content to clean Markdown format
+4. Return structured metadata and formatted content
 
 ### Browse Categories
 Ask your AI assistant: *"What drawing categories are available?"*
@@ -272,6 +270,7 @@ mcp-drawing-guides/
 - `requests`: HTTP library for web scraping
 - `beautifulsoup4`: HTML parsing and content extraction
 - `lxml`: Fast XML and HTML parser
+- `markdownify`: HTML to Markdown conversion
 
 ### Customization
 
